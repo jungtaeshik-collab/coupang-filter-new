@@ -193,18 +193,25 @@ function getPetitCategory(row) {
   const name = String(row['SKU 이름'] || '').trim();
 
   // ── 스티커 판별 ──────────────────────────────────────────────────
-  // DA / PD / TS + 숫자 (앞에 언더스코어, 공백, 하이픈 등 있어도 허용)
-  if (/(^|[\s_\-/])((DA|PD|TS)[\d\-])/i.test(name)) return 'sticker';
+  // DA / PD / TS + 숫자 또는 하이픈 (위치 무관)
+  if (/DA[-_\d]/i.test(name)) return 'sticker';
+  if (/PD[-_\d]/i.test(name)) return 'sticker';
+  if (/TS[-_\d]/i.test(name)) return 'sticker';
 
   // ── 견출지 판별 ──────────────────────────────────────────────────
-  // 20- 포함 (앞 문자 무관)
-  if (/20-/i.test(name)) return 'label';
-  // OPM- 또는 OPM 뒤 바로 영문/숫자
-  if (/OPM[-\w]/i.test(name)) return 'label';
-  // DT + 숫자
-  if (/(^|[\s_\-/])DT[\d]/i.test(name)) return 'label';
-  // 키워드 포함 → 견출지
-  const labelKeywords = ['인덱스','오피스포인트마스킹','오피스 포인트 마스킹','보호필름','크라프트','라벨','눈알','칼라분류','마스킹견출지','견출지','무지견출지','유광견출지','투명봉인','링라벨'];
+  // OPM 포함 (위치 무관)
+  if (/OPM/i.test(name)) return 'label';
+  // 20- 또는 20_ 포함 (위치 무관)
+  if (/20[-_]/i.test(name)) return 'label';
+  // DT + 숫자 포함
+  if (/DT\d/i.test(name)) return 'label';
+  // 견출지 키워드 (위치 무관)
+  const labelKeywords = [
+    '인덱스','오피스포인트마스킹','오피스 포인트 마스킹','보호필름','크라프트',
+    '라벨','눈알','칼라분류','마스킹견출지','견출지','무지견출지','유광견출지',
+    '투명봉인','링라벨','눈모양','모서리스티커','장식용스티커','모양스티커',
+    '알파벳','화살표스티커','스티커명찰'
+  ];
   if (labelKeywords.some(k => name.includes(k))) return 'label';
 
   return 'other';
