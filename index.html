@@ -37,6 +37,9 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#F4
 .tab{background:none;border:none;padding:8px 16px;font-size:13px;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;font-family:inherit}
 .tab.active-disc{color:#C62828;font-weight:700;border-bottom-color:#C62828}
 .tab.active-ok{color:#2E7D32;font-weight:700;border-bottom-color:#2E7D32}
+.tab.active-ps{color:#6A1B9A;font-weight:700;border-bottom-color:#6A1B9A}
+.tab.active-pl{color:#AD1457;font-weight:700;border-bottom-color:#AD1457}
+.tab.active-po{color:#888;font-weight:700;border-bottom-color:#888}
 .tab.active-floem{color:#1565C0;font-weight:700;border-bottom-color:#1565C0}
 .tab.active-petit{color:#6A1B9A;font-weight:700;border-bottom-color:#6A1B9A}
 .tab.active-label{color:#AD1457;font-weight:700;border-bottom-color:#AD1457}
@@ -185,6 +188,16 @@ function getPetitCategory(row, headers) {
   return 'other';
 }
 
+// 쁘띠팬시 세부 분류: 'sticker' | 'label' | 'other'
+function getPetitCategory(row) {
+  const name = String(row['SKU 이름'] || '').trim();
+  // 스티커: DA / PD / TS 코드 포함
+  if (/\b(DA|PD|TS)\d/i.test(name)) return 'sticker';
+  // 견출지: 20- / OPM / DT 코드 포함
+  if (/\b20-/i.test(name) || /\bOPM\d/i.test(name) || /\bDT\d/i.test(name)) return 'label';
+  return 'other';
+}
+
 function reorderHeaders(headers) {
   const front = COL_ORDER_FRONT.filter(h => headers.includes(h));
   const back  = headers.filter(h => !COL_ORDER_FRONT.includes(h));
@@ -318,7 +331,7 @@ function renderTable() {
 
   const orderedCols = reorderHeaders(result.headers);
   const brandNames = { 'floem':'플로엠', 'petit-sticker':'쁘띠스티커', 'petit-label':'쁘띠견출지', 'petit-other':'쁘띠기타' };
-  const prefixCol   = currentTab === 'disc' ? '단종여부' : '브랜드';
+  const prefixCol = currentTab === 'disc' ? '단종여부' : '브랜드';
   const showHeaders = [prefixCol, ...orderedCols];
   thead.innerHTML = '<tr>' + showHeaders.map(h => `<th>${h}</th>`).join('') + '</tr>';
 
