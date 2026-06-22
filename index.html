@@ -297,6 +297,27 @@ function sortPetitLabel(items) {
   });
 }
 
+// 쁘띠기타 정렬: 만년스템프/만년스탬프 → 스탬프/스템프 → 패드 → 명찰 → 나머지, 각 그룹 내 SKU ID 오름차순
+function sortPetitOther(items) {
+  function getGroup(name) {
+    if (name.includes('만년스템프') || name.includes('만년스탬프')) return 0;
+    if (name.includes('스탬프') || name.includes('스템프'))         return 1;
+    if (name.includes('패드'))                                       return 2;
+    if (name.includes('명찰'))                                       return 3;
+    return 4;
+  }
+  return [...items].sort((a, b) => {
+    const na = String(a.row['SKU 이름'] || '');
+    const nb = String(b.row['SKU 이름'] || '');
+    const gA = getGroup(na), gB = getGroup(nb);
+    if (gA !== gB) return gA - gB;
+    // 같은 그룹 내 SKU ID 오름차순
+    const idA = parseInt(a.row['SKU ID'] || 0);
+    const idB = parseInt(b.row['SKU ID'] || 0);
+    return idA - idB;
+  });
+}
+
 function reorderHeaders(headers) {
   const front = COL_ORDER_FRONT.filter(h => headers.includes(h));
   const back  = headers.filter(h => !COL_ORDER_FRONT.includes(h));
@@ -367,8 +388,9 @@ function processFile(file) {
       // 쁘띠팬시 전체 = sticker + label + other
       const sortedSticker = sortPetitSticker(petitSticker);
       const sortedLabel   = sortPetitLabel(petitLabel);
-      const petit = [...sortedSticker, ...sortedLabel, ...petitOther];
-      result = { total: disc.length + floem.length + petit.length, disc, floem, petit, petitSticker: sortedSticker, petitLabel: sortedLabel, petitOther, headers, fileName: file.name };
+      const sortedOther   = sortPetitOther(petitOther);
+      const petit = [...sortedSticker, ...sortedLabel, ...sortedOther];
+      result = { total: disc.length + floem.length + petit.length, disc, floem, petit, petitSticker: sortedSticker, petitLabel: sortedLabel, petitOther: sortedOther, headers, fileName: file.name };
       currentTab = 'disc';
       renderResult();
 
