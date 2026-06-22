@@ -192,20 +192,19 @@ function getPetitCategory(row, headers) {
 function getPetitCategory(row) {
   const name = String(row['SKU 이름'] || '').trim();
 
+  // ── 최우선: 스탬프류 → 무조건 기타 ──────────────────────────────
+  if (['스탬프','스템프','만년스탬프','만년스템프'].some(k => name.includes(k))) return 'other';
+
   // ── 스티커 판별 ──────────────────────────────────────────────────
-  // DA / PD / TS + 숫자 또는 하이픈 (위치 무관)
   if (/DA[-_\d]/i.test(name)) return 'sticker';
   if (/PD[-_\d]/i.test(name)) return 'sticker';
   if (/TS[-_\d]/i.test(name)) return 'sticker';
 
   // ── 견출지 판별 ──────────────────────────────────────────────────
-  // OPM 포함 (위치 무관)
   if (/OPM/i.test(name)) return 'label';
-  // 20- 또는 20_ 포함 (위치 무관)
   if (/20[-_]/i.test(name)) return 'label';
-  // DT + 숫자 포함
   if (/DT\d/i.test(name)) return 'label';
-  // 견출지 키워드 (위치 무관)
+  if (/HR[-_\d]/i.test(name)) return 'label';
   const labelKeywords = [
     '인덱스','오피스포인트마스킹','오피스 포인트 마스킹','보호필름','크라프트',
     '라벨','눈알','칼라분류','마스킹견출지','견출지','무지견출지','유광견출지',
