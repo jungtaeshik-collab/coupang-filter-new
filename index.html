@@ -219,57 +219,81 @@ function getPetitCategory(row) {
   return 'other';
 }
 
-// 쁘띠스티커 정렬: DA → PD → TS 순, 각 그룹 내 숫자 오름차순
+// SKU 이름에서 제품 코드 추출 (DA5300, PD1001, TS067, 20-B213, OPM-L304 등)
+function extractCode(name) {
+  // 스티커 코드
+  const ms = name.match(/(DA|PD|TS)([-_]?\d+)/i);
+  if (ms) return ms[1].toUpperCase() + ms[2];
+  // 견출지 코드
+  const m20 = name.match(/20[-_][A-Z0-9\-]+/i);
+  if (m20) return m20[0].toUpperCase();
+  const mOPM = name.match(/OPM[-_]?[A-Z0-9\-]+/i);
+  if (mOPM) return mOPM[0].toUpperCase();
+  const mDT = name.match(/DT\d[A-Z0-9\-]*/i);
+  if (mDT) return mDT[0].toUpperCase();
+  const mHR = name.match(/HR[-_]?[A-Z0-9\-]+/i);
+  if (mHR) return mHR[0].toUpperCase();
+  return name;
+}
+
+// 쁘띠스티커 정렬: DA → PD → TS 순, 같은 코드끼리 묶고 SKU ID 오름차순
 function sortPetitSticker(items) {
-  const order = { DA: 0, PD: 1, TS: 2 };
+  const prefOrder = { DA: 0, PD: 1, TS: 2 };
   return [...items].sort((a, b) => {
     const na = String(a.row['SKU 이름'] || '');
     const nb = String(b.row['SKU 이름'] || '');
-    // 코드 추출: DA5300, PD1001, TS067 등
     const ma = na.match(/(DA|PD|TS)([-_]?)(\d+)/i);
     const mb = nb.match(/(DA|PD|TS)([-_]?)(\d+)/i);
     const prefA = ma ? ma[1].toUpperCase() : 'ZZ';
     const prefB = mb ? mb[1].toUpperCase() : 'ZZ';
     const numA  = ma ? parseInt(ma[3]) : 99999;
     const numB  = mb ? parseInt(mb[3]) : 99999;
-    const oA = order[prefA] ?? 9;
-    const oB = order[prefB] ?? 9;
+    const oA = prefOrder[prefA] ?? 9;
+    const oB = prefOrder[prefB] ?? 9;
+    // 1단계: 접두어 그룹 (DA→PD→TS)
     if (oA !== oB) return oA - oB;
-    return numA - numB;
+    // 2단계: 코드 숫자 오름차순 (같은 코드끼리 묶임)
+    if (numA !== numB) return numA - numB;
+    // 3단계: 같은 코드면 SKU ID 오름차순
+    const idA = parseInt(a.row['SKU ID'] || 0);
+    const idB = parseInt(b.row['SKU ID'] || 0);
+    return idA - idB;
   });
 }
 
-// 쁘띠견출지 정렬: 20- → OPM → DT → HR → 키워드 순, 각 그룹 내 숫자/코드 오름차순
+// 쁘띠견출지 정렬: 20- → OPM → DT → HR → 키워드 순, 같은 코드끼리 묶고 SKU ID 오름차순
 function sortPetitLabel(items) {
   function getGroup(name) {
     if (/20[-_]/i.test(name))  return 0;
     if (/OPM/i.test(name))     return 1;
     if (/DT\d/i.test(name))   return 2;
     if (/HR/i.test(name))      return 3;
-    return 4; // 키워드 그룹
+    return 4;
   }
-  function getSortKey(name) {
-    // 20-xxx → 숫자 추출
-    const m20 = name.match(/20[-_]([A-Z]?)(\d+)/i);
-    if (m20) return (m20[1] || '') + m20[2].padStart(6, '0');
-    // OPMxxx → 숫자 추출
+  function getCodeNum(name) {
+    const m20  = name.match(/20[-_]([A-Z]?)(\d+)/i);
+    if (m20)  return (m20[1]  || '').toUpperCase() + m20[2].padStart(6,'0');
     const mOPM = name.match(/OPM[-_]?([A-Z]?)(\d+)/i);
-    if (mOPM) return (mOPM[1] || '') + mOPM[2].padStart(6, '0');
-    // DTxxx → 숫자 추출
-    const mDT = name.match(/DT(\d+)/i);
-    if (mDT) return mDT[1].padStart(6, '0');
-    // HRxxx → 숫자 추출
-    const mHR = name.match(/HR[-_]?([A-Z]?)(\d+)/i);
-    if (mHR) return (mHR[1] || '') + mHR[2].padStart(6, '0');
+    if (mOPM) return (mOPM[1] || '').toUpperCase() + mOPM[2].padStart(6,'0');
+    const mDT  = name.match(/DT(\d+)/i);
+    if (mDT)  return mDT[1].padStart(6,'0');
+    const mHR  = name.match(/HR[-_]?([A-Z]?)(\d+)/i);
+    if (mHR)  return (mHR[1] || '').toUpperCase() + mHR[2].padStart(6,'0');
     return name;
   }
   return [...items].sort((a, b) => {
     const na = String(a.row['SKU 이름'] || '');
     const nb = String(b.row['SKU 이름'] || '');
+    // 1단계: 그룹 (20-→OPM→DT→HR→기타)
     const gA = getGroup(na), gB = getGroup(nb);
     if (gA !== gB) return gA - gB;
-    const kA = getSortKey(na), kB = getSortKey(nb);
-    return kA < kB ? -1 : kA > kB ? 1 : 0;
+    // 2단계: 코드 번호 오름차순 (같은 코드끼리 묶임)
+    const kA = getCodeNum(na), kB = getCodeNum(nb);
+    if (kA !== kB) return kA < kB ? -1 : 1;
+    // 3단계: 같은 코드면 SKU ID 오름차순
+    const idA = parseInt(a.row['SKU ID'] || 0);
+    const idB = parseInt(b.row['SKU ID'] || 0);
+    return idA - idB;
   });
 }
 
