@@ -192,7 +192,10 @@ function getPetitCategory(row, headers) {
 function getPetitCategory(row) {
   const name = String(row['SKU 이름'] || '').trim();
 
-  // ── 최우선: 스탬프류 → 무조건 기타 ──────────────────────────────
+  // ── 최우선 1: 타투 → 무조건 스티커 ─────────────────────────────
+  if (name.includes('타투')) return 'sticker';
+
+  // ── 최우선 2: 스탬프류 → 무조건 기타 ────────────────────────────
   if (['스탬프','스템프','만년스탬프','만년스템프'].some(k => name.includes(k))) return 'other';
 
   // ── 스티커 판별 ──────────────────────────────────────────────────
