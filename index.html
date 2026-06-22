@@ -219,6 +219,60 @@ function getPetitCategory(row) {
   return 'other';
 }
 
+// 쁘띠스티커 정렬: DA → PD → TS 순, 각 그룹 내 숫자 오름차순
+function sortPetitSticker(items) {
+  const order = { DA: 0, PD: 1, TS: 2 };
+  return [...items].sort((a, b) => {
+    const na = String(a.row['SKU 이름'] || '');
+    const nb = String(b.row['SKU 이름'] || '');
+    // 코드 추출: DA5300, PD1001, TS067 등
+    const ma = na.match(/(DA|PD|TS)([-_]?)(\d+)/i);
+    const mb = nb.match(/(DA|PD|TS)([-_]?)(\d+)/i);
+    const prefA = ma ? ma[1].toUpperCase() : 'ZZ';
+    const prefB = mb ? mb[1].toUpperCase() : 'ZZ';
+    const numA  = ma ? parseInt(ma[3]) : 99999;
+    const numB  = mb ? parseInt(mb[3]) : 99999;
+    const oA = order[prefA] ?? 9;
+    const oB = order[prefB] ?? 9;
+    if (oA !== oB) return oA - oB;
+    return numA - numB;
+  });
+}
+
+// 쁘띠견출지 정렬: 20- → OPM → DT → HR → 키워드 순, 각 그룹 내 숫자/코드 오름차순
+function sortPetitLabel(items) {
+  function getGroup(name) {
+    if (/20[-_]/i.test(name))  return 0;
+    if (/OPM/i.test(name))     return 1;
+    if (/DT\d/i.test(name))   return 2;
+    if (/HR/i.test(name))      return 3;
+    return 4; // 키워드 그룹
+  }
+  function getSortKey(name) {
+    // 20-xxx → 숫자 추출
+    const m20 = name.match(/20[-_]([A-Z]?)(\d+)/i);
+    if (m20) return (m20[1] || '') + m20[2].padStart(6, '0');
+    // OPMxxx → 숫자 추출
+    const mOPM = name.match(/OPM[-_]?([A-Z]?)(\d+)/i);
+    if (mOPM) return (mOPM[1] || '') + mOPM[2].padStart(6, '0');
+    // DTxxx → 숫자 추출
+    const mDT = name.match(/DT(\d+)/i);
+    if (mDT) return mDT[1].padStart(6, '0');
+    // HRxxx → 숫자 추출
+    const mHR = name.match(/HR[-_]?([A-Z]?)(\d+)/i);
+    if (mHR) return (mHR[1] || '') + mHR[2].padStart(6, '0');
+    return name;
+  }
+  return [...items].sort((a, b) => {
+    const na = String(a.row['SKU 이름'] || '');
+    const nb = String(b.row['SKU 이름'] || '');
+    const gA = getGroup(na), gB = getGroup(nb);
+    if (gA !== gB) return gA - gB;
+    const kA = getSortKey(na), kB = getSortKey(nb);
+    return kA < kB ? -1 : kA > kB ? 1 : 0;
+  });
+}
+
 function reorderHeaders(headers) {
   const front = COL_ORDER_FRONT.filter(h => headers.includes(h));
   const back  = headers.filter(h => !COL_ORDER_FRONT.includes(h));
@@ -287,8 +341,10 @@ function processFile(file) {
       }
 
       // 쁘띠팬시 전체 = sticker + label + other
-      const petit = [...petitSticker, ...petitLabel, ...petitOther];
-      result = { total: disc.length + floem.length + petit.length, disc, floem, petit, petitSticker, petitLabel, petitOther, headers, fileName: file.name };
+      const sortedSticker = sortPetitSticker(petitSticker);
+      const sortedLabel   = sortPetitLabel(petitLabel);
+      const petit = [...sortedSticker, ...sortedLabel, ...petitOther];
+      result = { total: disc.length + floem.length + petit.length, disc, floem, petit, petitSticker: sortedSticker, petitLabel: sortedLabel, petitOther, headers, fileName: file.name };
       currentTab = 'disc';
       renderResult();
 
