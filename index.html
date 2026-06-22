@@ -191,10 +191,22 @@ function getPetitCategory(row, headers) {
 // 쁘띠팬시 세부 분류: 'sticker' | 'label' | 'other'
 function getPetitCategory(row) {
   const name = String(row['SKU 이름'] || '').trim();
-  // 스티커: DA / PD / TS 코드 포함
-  if (/\b(DA|PD|TS)\d/i.test(name)) return 'sticker';
-  // 견출지: 20- / OPM / DT 코드 포함
-  if (/\b20-/i.test(name) || /\bOPM\d/i.test(name) || /\bDT\d/i.test(name)) return 'label';
+
+  // ── 스티커 판별 ──────────────────────────────────────────────────
+  // DA / PD / TS + 숫자 (앞에 언더스코어, 공백, 하이픈 등 있어도 허용)
+  if (/(^|[\s_\-/])((DA|PD|TS)[\d\-])/i.test(name)) return 'sticker';
+
+  // ── 견출지 판별 ──────────────────────────────────────────────────
+  // 20- 포함 (앞 문자 무관)
+  if (/20-/i.test(name)) return 'label';
+  // OPM- 또는 OPM 뒤 바로 영문/숫자
+  if (/OPM[-\w]/i.test(name)) return 'label';
+  // DT + 숫자
+  if (/(^|[\s_\-/])DT[\d]/i.test(name)) return 'label';
+  // 키워드 포함 → 견출지
+  const labelKeywords = ['인덱스','오피스포인트마스킹','오피스 포인트 마스킹','보호필름','크라프트','라벨','눈알','칼라분류','마스킹견출지','견출지','무지견출지','유광견출지','투명봉인','링라벨'];
+  if (labelKeywords.some(k => name.includes(k))) return 'label';
+
   return 'other';
 }
 
