@@ -261,6 +261,23 @@ function sortPetitSticker(items) {
   });
 }
 
+// 색상 표기 정규화: 다양한 색상 표기를 통일된 코드로 변환
+function normalizeColor(str) {
+  return str
+    .replace(/적색|빨강|빨간색|RED/gi,   'R')
+    .replace(/청색|파랑|파란색|블루|BLUE/gi, 'B')
+    .replace(/혼합|혼합색상|MIXED/gi,    'A')
+    .replace(/흰색|화이트|백색|WHITE/gi, 'W')
+    .replace(/녹색|초록|GREEN/gi,        'G')
+    .replace(/노랑|노란색|YELLOW/gi,     'Y')
+    .replace(/검정|검은색|블랙|BLACK/gi, 'BK')
+    .replace(/보라|보라색|PURPLE/gi,     'V')
+    .replace(/금색|골드|GOLD/gi,         'GD')
+    .replace(/은색|실버|SILVER/gi,       'SL')
+    .replace(/하늘색|SKY/gi,             'SB')
+    .replace(/형광/gi,                   'F');
+}
+
 // 쁘띠견출지 정렬: 20- → OPM → DT → HR → 키워드 순, 같은 코드끼리 묶고 SKU ID 오름차순
 function sortPetitLabel(items) {
   function getGroup(name) {
@@ -270,16 +287,22 @@ function sortPetitLabel(items) {
     if (/HR/i.test(name))      return 3;
     return 4;
   }
-  function getCodeNum(name) {
-    const m20  = name.match(/20[-_]([A-Z]?)(\d+)/i);
-    if (m20)  return (m20[1]  || '').toUpperCase() + m20[2].padStart(6,'0');
-    const mOPM = name.match(/OPM[-_]?([A-Z]?)(\d+)/i);
-    if (mOPM) return (mOPM[1] || '').toUpperCase() + mOPM[2].padStart(6,'0');
-    const mDT  = name.match(/DT(\d+)/i);
-    if (mDT)  return mDT[1].padStart(6,'0');
-    const mHR  = name.match(/HR[-_]?([A-Z]?)(\d+)/i);
-    if (mHR)  return (mHR[1] || '').toUpperCase() + mHR[2].padStart(6,'0');
-    return name;
+  function getCodeKey(name) {
+    // 색상 정규화 후 코드 추출
+    const n = normalizeColor(name);
+    // 20-xxx: 코드 전체 추출 (예: 20-531R, 20-B213, 20-K213)
+    const m20 = n.match(/20[-_]([A-Z0-9]+)/i);
+    if (m20) return '20-' + m20[1].toUpperCase();
+    // OPM-xxx
+    const mOPM = n.match(/OPM[-_]?([A-Z0-9]+)/i);
+    if (mOPM) return 'OPM-' + mOPM[1].toUpperCase();
+    // DTxxx
+    const mDT = n.match(/DT(\d+[A-Z]*)/i);
+    if (mDT) return 'DT' + mDT[1].toUpperCase();
+    // HRxxx
+    const mHR = n.match(/HR[-_]?([A-Z0-9]+)/i);
+    if (mHR) return 'HR' + mHR[1].toUpperCase();
+    return n;
   }
   return [...items].sort((a, b) => {
     const na = String(a.row['SKU 이름'] || '');
@@ -287,8 +310,8 @@ function sortPetitLabel(items) {
     // 1단계: 그룹 (20-→OPM→DT→HR→기타)
     const gA = getGroup(na), gB = getGroup(nb);
     if (gA !== gB) return gA - gB;
-    // 2단계: 코드 번호 오름차순 (같은 코드끼리 묶임)
-    const kA = getCodeNum(na), kB = getCodeNum(nb);
+    // 2단계: 정규화된 코드 기준 오름차순 (같은 코드끼리 묶임)
+    const kA = getCodeKey(na), kB = getCodeKey(nb);
     if (kA !== kB) return kA < kB ? -1 : 1;
     // 3단계: 같은 코드면 SKU ID 오름차순
     const idA = parseInt(a.row['SKU ID'] || 0);
