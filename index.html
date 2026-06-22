@@ -190,7 +190,7 @@ function getPetitCategory(row, headers) {
 
 // 쁘띠팬시 세부 분류: 'sticker' | 'label' | 'other'
 function getPetitCategory(row) {
-  const name = String(row['SKU 이름'] || '').trim();
+  const name = stripPack(String(row['SKU 이름'] || '').trim());
 
   // ── 최우선 1: 타투 → 무조건 스티커 ─────────────────────────────
   if (name.includes('타투')) return 'sticker';
@@ -240,8 +240,8 @@ function extractCode(name) {
 function sortPetitSticker(items) {
   const prefOrder = { DA: 0, PD: 1, TS: 2 };
   return [...items].sort((a, b) => {
-    const na = String(a.row['SKU 이름'] || '');
-    const nb = String(b.row['SKU 이름'] || '');
+    const na = stripPack(String(a.row['SKU 이름'] || ''));
+    const nb = stripPack(String(b.row['SKU 이름'] || ''));
     const ma = na.match(/(DA|PD|TS)([-_]?)(\d+)/i);
     const mb = nb.match(/(DA|PD|TS)([-_]?)(\d+)/i);
     const prefA = ma ? ma[1].toUpperCase() : 'ZZ';
@@ -259,6 +259,11 @@ function sortPetitSticker(items) {
     const idB = parseInt(b.row['SKU ID'] || 0);
     return idA - idB;
   });
+}
+
+// PACK 제거: 정렬 시 Pack_, Pack 등 무시
+function stripPack(name) {
+  return name.replace(/pack[_\s]*/gi, '').trim();
 }
 
 // 색상 표기 정규화: 다양한 색상 표기를 통일된 코드로 변환
@@ -305,8 +310,8 @@ function sortPetitLabel(items) {
     return n;
   }
   return [...items].sort((a, b) => {
-    const na = String(a.row['SKU 이름'] || '');
-    const nb = String(b.row['SKU 이름'] || '');
+    const na = stripPack(String(a.row['SKU 이름'] || ''));
+    const nb = stripPack(String(b.row['SKU 이름'] || ''));
     // 1단계: 그룹 (20-→OPM→DT→HR→기타)
     const gA = getGroup(na), gB = getGroup(nb);
     if (gA !== gB) return gA - gB;
@@ -330,8 +335,8 @@ function sortPetitOther(items) {
     return 4;
   }
   return [...items].sort((a, b) => {
-    const na = String(a.row['SKU 이름'] || '');
-    const nb = String(b.row['SKU 이름'] || '');
+    const na = stripPack(String(a.row['SKU 이름'] || ''));
+    const nb = stripPack(String(b.row['SKU 이름'] || ''));
     const gA = getGroup(na), gB = getGroup(nb);
     if (gA !== gB) return gA - gB;
     // 같은 그룹 내 SKU ID 오름차순
@@ -356,8 +361,9 @@ function sortFloem(items) {
   ];
 
   function getInfo(name) {
+    const n = stripPack(name);
     for (const p of prefOrder) {
-      const m = name.match(p.pat);
+      const m = n.match(p.pat);
       if (m) return { order: p.order, key: p.key, num: parseInt(m[1]) };
     }
     return { order: 99, key: '', num: 99999 };
