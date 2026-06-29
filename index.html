@@ -390,6 +390,10 @@ function reorderHeaders(headers) {
   return [...front, ...back];
 }
 
+// SKU ID 강제 분류 예외 목록 (모든 조건보다 우선 적용)
+const FORCE_FLOEM   = new Set(['6560953','6560972','6560973','2044977']);
+const FORCE_STICKER = new Set(['546001','546002','3679807','546005']);
+
 let addedList = [];
 let result = null;
 let currentTab = 'disc';
@@ -437,6 +441,10 @@ function processFile(file) {
         headers.forEach((h, ci) => { rowObj[h] = rows[r][ci] ?? ''; });
         if (fullSet.has(code)) {
           disc.push({ code, row: rowObj, discName: fullMap[code] || '' });
+        } else if (FORCE_FLOEM.has(code)) {
+          floem.push({ code, row: rowObj });
+        } else if (FORCE_STICKER.has(code)) {
+          petitSticker.push({ code, row: rowObj });
         } else if (FLOEM_CODES.has(code)) {
           floem.push({ code, row: rowObj });
         } else {
