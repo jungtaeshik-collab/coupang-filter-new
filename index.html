@@ -61,6 +61,18 @@ tr:nth-child(even) td{background:#FAFAFA}
 .tag-code{font-family:monospace;font-weight:600}
 .tag-del{background:none;border:none;cursor:pointer;color:#BBB;padding:0;font-size:14px;line-height:1}
 .disc-count{margin-top:10px;font-size:11px;color:#BABABE}
+.amount-section{background:#fff;border-radius:14px;border:1px solid #E8E8EA;padding:16px 20px;margin-bottom:14px}
+.amount-title{font-size:13px;font-weight:600;color:#333;margin-bottom:12px}
+.amount-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.amount-card{background:#F7F7F8;border-radius:10px;padding:11px 14px}
+.amount-label{font-size:11px;color:#888;margin-bottom:3px}
+.amount-val{font-size:16px;font-weight:700;letter-spacing:-0.5px;color:#111}
+.amount-val.total{color:#1A44C4;font-size:18px}
+.amount-val.disc{color:#C62828}
+.amount-val.floem{color:#1565C0}
+.amount-val.ps{color:#6A1B9A}
+.amount-val.pl{color:#AD1457}
+.amount-val.po{color:#555}
 .copied{background:#EDFAF1!important;color:#1B6535!important;border-color:#A8DFBA!important}
 </style>
 </head>
@@ -86,6 +98,37 @@ tr:nth-child(even) td{background:#FAFAFA}
       </div>
     </label>
     <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;z-index:-1">
+  </div>
+
+  <!-- 발주 금액 요약 -->
+  <div class="amount-section" id="amount-section" style="display:none">
+    <div class="amount-title">💰 발주 금액 요약</div>
+    <div class="amount-grid">
+      <div class="amount-card" style="grid-column:1/-1;background:#EEF2FF;border:1px solid #C5D3F7">
+        <div class="amount-label">전체 총발주 매입금 (U열 합계)</div>
+        <div class="amount-val total" id="amt-total">-</div>
+      </div>
+      <div class="amount-card">
+        <div class="amount-label" style="color:#C62828">단종</div>
+        <div class="amount-val disc" id="amt-disc">-</div>
+      </div>
+      <div class="amount-card">
+        <div class="amount-label" style="color:#1565C0">플로엠</div>
+        <div class="amount-val floem" id="amt-floem">-</div>
+      </div>
+      <div class="amount-card">
+        <div class="amount-label" style="color:#6A1B9A">쁘띠스티커</div>
+        <div class="amount-val ps" id="amt-ps">-</div>
+      </div>
+      <div class="amount-card">
+        <div class="amount-label" style="color:#AD1457">쁘띠견출지</div>
+        <div class="amount-val pl" id="amt-pl">-</div>
+      </div>
+      <div class="amount-card">
+        <div class="amount-label" style="color:#555">쁘띠기타</div>
+        <div class="amount-val po" id="amt-po">-</div>
+      </div>
+    </div>
   </div>
 
   <!-- 결과 -->
@@ -477,6 +520,17 @@ function processFile(file) {
 }
 
 // ── 결과 렌더링 ────────────────────────────────────────────────────────────
+function sumAmt(items) {
+  return items.reduce((s, item) => {
+    const v = parseFloat(String(item.row['총발주 매입금'] || '0').replace(/,/g, ''));
+    return s + (isNaN(v) ? 0 : v);
+  }, 0);
+}
+
+function fmtAmt(n) {
+  return '₩' + Math.round(n).toLocaleString('ko-KR') + '원';
+}
+
 function renderResult() {
   if (!result) return;
   document.getElementById('result-card').style.display = 'block';
