@@ -102,13 +102,44 @@ tr:nth-child(even) td{background:#FAFAFA}
 
   <!-- 결과 -->
   <div class="card" id="result-card" style="display:none">
+    <!-- 전체 합계 바 -->
+    <div style="background:#EEF2FF;border:1px solid #C5D3F7;border-radius:10px;padding:13px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:#555;margin-bottom:2px">전체 품목</div>
+        <div style="font-size:24px;font-weight:700;color:#1A44C4" id="s-total">0</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#555;margin-bottom:2px">전체 총발주 매입금 (U열 합계)</div>
+        <div style="font-size:22px;font-weight:700;color:#1A44C4" id="amt-total">-</div>
+      </div>
+    </div>
+    <!-- 분류별 카드 -->
     <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-      <div class="stat-card"><div class="stat-label">전체 품목</div><div class="stat-val" id="s-total">0</div></div>
-      <div class="stat-card"><div class="stat-label" style="color:#C62828">단종</div><div class="stat-val" style="color:#C62828" id="s-disc">0</div></div>
-      <div class="stat-card"><div class="stat-label" style="color:#1565C0">플로엠</div><div class="stat-val" style="color:#1565C0" id="s-floem">0</div></div>
-      <div class="stat-card"><div class="stat-label" style="color:#6A1B9A">쁘띠스티커</div><div class="stat-val" style="color:#6A1B9A" id="s-petit-sticker">0</div></div>
-      <div class="stat-card"><div class="stat-label" style="color:#AD1457">쁘띠견출지</div><div class="stat-val" style="color:#AD1457" id="s-petit-label">0</div></div>
-      <div class="stat-card"><div class="stat-label" style="color:#888">쁘띠기타</div><div class="stat-val" style="color:#888" id="s-petit-other">0</div></div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:#C62828">단종</div>
+        <div class="stat-val" style="color:#C62828" id="s-disc">0</div>
+        <div style="font-size:12px;color:#C62828;font-weight:600;margin-top:5px" id="amt-disc">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:#1565C0">플로엠</div>
+        <div class="stat-val" style="color:#1565C0" id="s-floem">0</div>
+        <div style="font-size:12px;color:#1565C0;font-weight:600;margin-top:5px" id="amt-floem">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:#6A1B9A">쁘띠스티커</div>
+        <div class="stat-val" style="color:#6A1B9A" id="s-ps">0</div>
+        <div style="font-size:12px;color:#6A1B9A;font-weight:600;margin-top:5px" id="amt-ps">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:#AD1457">쁘띠견출지</div>
+        <div class="stat-val" style="color:#AD1457" id="s-pl">0</div>
+        <div style="font-size:12px;color:#AD1457;font-weight:600;margin-top:5px" id="amt-pl">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:#888">쁘띠기타</div>
+        <div class="stat-val" style="color:#888" id="s-po">0</div>
+        <div style="font-size:12px;color:#888;font-weight:600;margin-top:5px" id="amt-po">-</div>
+      </div>
     </div>
 
     <!-- 전체 액션 -->
@@ -506,9 +537,17 @@ function renderResult() {
   document.getElementById('s-total').textContent = result.total.toLocaleString();
   document.getElementById('s-disc').textContent = result.disc.length.toLocaleString();
   document.getElementById('s-floem').textContent = result.floem.length.toLocaleString();
-  document.getElementById('s-petit-sticker').textContent = result.petitSticker.length.toLocaleString();
-  document.getElementById('s-petit-label').textContent = result.petitLabel.length.toLocaleString();
-  document.getElementById('s-petit-other').textContent = result.petitOther.length.toLocaleString();
+  document.getElementById('s-ps').textContent = result.petitSticker.length.toLocaleString();
+  document.getElementById('s-pl').textContent = result.petitLabel.length.toLocaleString();
+  document.getElementById('s-po').textContent = result.petitOther.length.toLocaleString();
+  // 금액 계산
+  const allItems = [...result.disc, ...result.floem, ...result.petitSticker, ...result.petitLabel, ...result.petitOther];
+  document.getElementById('amt-total').textContent = fmtAmt(sumAmt(allItems));
+  document.getElementById('amt-disc').textContent  = fmtAmt(sumAmt(result.disc));
+  document.getElementById('amt-floem').textContent = fmtAmt(sumAmt(result.floem));
+  document.getElementById('amt-ps').textContent    = fmtAmt(sumAmt(result.petitSticker));
+  document.getElementById('amt-pl').textContent    = fmtAmt(sumAmt(result.petitLabel));
+  document.getElementById('amt-po').textContent    = fmtAmt(sumAmt(result.petitOther));
   document.getElementById('tab-disc-count').textContent = result.disc.length.toLocaleString();
   document.getElementById('tab-floem-count').textContent = result.floem.length.toLocaleString();
   document.getElementById('tab-petit-sticker-count').textContent = result.petitSticker.length.toLocaleString();
