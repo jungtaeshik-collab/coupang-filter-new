@@ -100,37 +100,6 @@ tr:nth-child(even) td{background:#FAFAFA}
     <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;z-index:-1">
   </div>
 
-  <!-- 발주 금액 요약 -->
-  <div class="amount-section" id="amount-section" style="display:none">
-    <div class="amount-title">💰 발주 금액 요약</div>
-    <div class="amount-grid">
-      <div class="amount-card" style="grid-column:1/-1;background:#EEF2FF;border:1px solid #C5D3F7">
-        <div class="amount-label">전체 총발주 매입금 (U열 합계)</div>
-        <div class="amount-val total" id="amt-total">-</div>
-      </div>
-      <div class="amount-card">
-        <div class="amount-label" style="color:#C62828">단종</div>
-        <div class="amount-val disc" id="amt-disc">-</div>
-      </div>
-      <div class="amount-card">
-        <div class="amount-label" style="color:#1565C0">플로엠</div>
-        <div class="amount-val floem" id="amt-floem">-</div>
-      </div>
-      <div class="amount-card">
-        <div class="amount-label" style="color:#6A1B9A">쁘띠스티커</div>
-        <div class="amount-val ps" id="amt-ps">-</div>
-      </div>
-      <div class="amount-card">
-        <div class="amount-label" style="color:#AD1457">쁘띠견출지</div>
-        <div class="amount-val pl" id="amt-pl">-</div>
-      </div>
-      <div class="amount-card">
-        <div class="amount-label" style="color:#555">쁘띠기타</div>
-        <div class="amount-val po" id="amt-po">-</div>
-      </div>
-    </div>
-  </div>
-
   <!-- 결과 -->
   <div class="card" id="result-card" style="display:none">
     <div class="stats" style="grid-template-columns:repeat(3,1fr)">
