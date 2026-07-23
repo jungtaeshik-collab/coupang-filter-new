@@ -247,6 +247,7 @@ function getPetitCategory(row) {
   if (['스탬프','스템프','만년스탬프','만년스템프'].some(k => name.includes(k))) return 'other';
 
   // ── 스티커 판별 ──────────────────────────────────────────────────
+  if (name.includes('스티커명찰')) return 'sticker';
   if (/DA[-_\d]/i.test(name)) return 'sticker';
   if (/PD[-_\d]/i.test(name)) return 'sticker';
   if (/TS[-_\d]/i.test(name)) return 'sticker';
@@ -260,7 +261,7 @@ function getPetitCategory(row) {
     '인덱스','오피스포인트마스킹','오피스 포인트 마스킹','보호필름','크라프트',
     '라벨','눈알','칼라분류','마스킹견출지','견출지','무지견출지','유광견출지',
     '투명봉인','링라벨','눈모양','모서리스티커','장식용스티커','모양스티커',
-    '알파벳','화살표스티커','스티커명찰'
+    '알파벳','화살표스티커'
   ];
   if (labelKeywords.some(k => name.includes(k))) return 'label';
 
