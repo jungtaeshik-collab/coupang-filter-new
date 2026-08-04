@@ -1,0 +1,13 @@
+{
+  "name": "쿠팡필터",
+  "short_name": "쿠팡필터",
+  "description": "발주파일 단종품목, 품목별 매입처 분류",
+  "start_url": "/coupang-filter-new/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}
