@@ -69,6 +69,16 @@ tr:nth-child(even) td{background:#FAFAFA}
 .tag-code{font-family:monospace;font-weight:600}
 .tag-del{background:none;border:none;cursor:pointer;color:#BBB;padding:0;font-size:14px;line-height:1}
 .disc-count{margin-top:10px;font-size:11px;color:#BABABE}
+/* 팝업 */
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center}
+.popup-box{background:#fff;border-radius:16px;padding:28px 24px 20px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.18);text-align:center}
+.popup-icon{font-size:36px;margin-bottom:12px}
+.popup-title{font-size:15px;font-weight:700;color:#111;margin-bottom:10px;line-height:1.5}
+.popup-desc{font-size:13px;color:#555;line-height:1.7;margin-bottom:20px}
+.popup-highlight{color:#1A44C4;font-weight:700}
+.popup-btn{display:block;width:100%;padding:11px;background:#111;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px}
+.popup-check{display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:12px;color:#999}
+.popup-check input{cursor:pointer}
 .amount-section{background:#fff;border-radius:14px;border:1px solid #E8E8EA;padding:16px 20px;margin-bottom:14px}
 .amount-title{font-size:13px;font-weight:600;color:#333;margin-bottom:12px}
 .amount-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -85,6 +95,23 @@ tr:nth-child(even) td{background:#FAFAFA}
 </style>
 </head>
 <body>
+
+<!-- 안내 팝업 -->
+<div class="popup-overlay" id="guide-popup">
+  <div class="popup-box">
+    <div class="popup-icon">💡</div>
+    <div class="popup-title">품목 발주정렬 앱 안내</div>
+    <div class="popup-desc">
+      제품 분류 후<br>
+      오른쪽 위 <span class="popup-highlight">다음 앱 열기 →</span> 버튼을 누르면<br>
+      <strong>품목 발주정렬 앱</strong>으로 이동합니다.
+    </div>
+    <button class="popup-btn" onclick="closePopup()">확인</button>
+    <label class="popup-check">
+      <input type="checkbox" id="no-show-check"> 다시 보지 않기
+    </label>
+  </div>
+</div>
 
 <div class="header">
   <div>
@@ -763,6 +790,18 @@ dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dra
 dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
 dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); processFile(e.dataTransfer.files[0]); });
 fi.addEventListener('change', e => processFile(e.target.files[0]));
+
+// 팝업
+function closePopup() {
+  if (document.getElementById('no-show-check').checked) {
+    localStorage.setItem('guidePopupHidden', '1');
+  }
+  document.getElementById('guide-popup').style.display = 'none';
+}
+// 페이지 로드 시 팝업 표시 여부 체크
+if (localStorage.getItem('guidePopupHidden') === '1') {
+  document.getElementById('guide-popup').style.display = 'none';
+}
 </script>
 </body>
 </html>
