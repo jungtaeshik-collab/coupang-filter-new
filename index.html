@@ -214,10 +214,25 @@ tr:nth-child(even) td{background:#FAFAFA}
   <!-- 단종 코드 추가 -->
   <div class="card">
     <div class="card-title">단종 코드 추가 등록</div>
+    <!-- 개별 입력 -->
     <div class="add-form">
       <input type="text" id="add-code" placeholder="SKU ID (품목코드)" maxlength="20" onkeydown="if(event.key==='Enter') document.getElementById('add-name').focus()">
       <input type="text" id="add-name" placeholder="제품명 (선택)" onkeydown="if(event.key==='Enter') addCode()">
       <button class="btn btn-primary" onclick="addCode()">+ 추가</button>
+    </div>
+    <!-- 일괄 업로드 -->
+    <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #E8E8EA">
+      <div style="font-size:12px;color:#888;margin-bottom:8px">
+        📂 엑셀/CSV 일괄 업로드 
+        <span style="color:#BABABE">— A열: SKU ID, B열: 제품명 (헤더 없이 또는 있어도 됨)</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <label style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#F3F3F5;border:1px solid #D8D8DC;border-radius:8px;font-size:13px;font-weight:600;color:#333;cursor:pointer">
+          📋 파일 선택
+          <input type="file" id="bulk-upload-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="bulkUpload(this)">
+        </label>
+        <span style="font-size:12px;color:#BABABE" id="bulk-upload-status"></span>
+      </div>
     </div>
     <div class="tags" id="tag-list"></div>
     <div class="disc-count" id="disc-count-text">기본 427개 + 추가 0개 = 총 427개 단종 코드</div>
@@ -790,6 +805,53 @@ dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dra
 dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
 dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); processFile(e.dataTransfer.files[0]); });
 fi.addEventListener('change', e => processFile(e.target.files[0]));
+
+// 단종 코드 일괄 업로드
+function bulkUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('bulk-upload-status');
+  statusEl.textContent = '읽는 중...';
+  statusEl.style.color = '#888';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'binary' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      let added = 0, skipped = 0;
+      const fullBaseSet = new Set(BASE_LIST.map(b => b.code));
+
+      for (let r = 0; r < rows.length; r++) {
+        const rawCode = String(rows[r][0] || '').trim().split('.')[0];
+        const rawName = String(rows[r][1] || '').trim();
+
+        // 헤더 행 스킵 (숫자가 아니면)
+        if (!rawCode.match(/^\d+$/)) continue;
+
+        // 이미 기본 목록 또는 추가 목록에 있으면 스킵
+        if (fullBaseSet.has(rawCode) || addedList.find(a => a.code === rawCode)) {
+          skipped++;
+          continue;
+        }
+
+        addedList.push({ code: rawCode, name: rawName });
+        added++;
+      }
+
+      renderTags();
+      statusEl.textContent = `✓ ${added}개 추가 완료${skipped > 0 ? ` (${skipped}개 중복 스킵)` : ''}`;
+      statusEl.style.color = '#2E7D32';
+      input.value = ''; // 파일 초기화
+    } catch(err) {
+      statusEl.textContent = '오류: ' + err.message;
+      statusEl.style.color = '#C62828';
+    }
+  };
+  reader.readAsBinaryString(file);
+}
 
 // 팝업
 function closePopup() {
