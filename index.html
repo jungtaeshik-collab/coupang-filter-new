@@ -494,7 +494,12 @@ function reorderHeaders(headers) {
 const FORCE_FLOEM   = new Set(['6560953','6560972','6560973','42422247','2044887','6560954','6560955']);
 const FORCE_STICKER = new Set(['546001','546002','3679807','546005','22290032','31393744']);
 
+// localStorage에서 추가 단종 목록 불러오기
 let addedList = [];
+try {
+  const saved = localStorage.getItem('addedDiscList');
+  if (saved) addedList = JSON.parse(saved);
+} catch(e) { addedList = []; }
 let result = null;
 let currentTab = 'disc';
 
@@ -781,6 +786,7 @@ function addCode() {
 
 function removeAdded(code) {
   addedList = addedList.filter(a => a.code !== code);
+  saveAddedList();
   renderTags();
 }
 
@@ -841,6 +847,7 @@ function bulkUpload(input) {
         added++;
       }
 
+      saveAddedList();
       renderTags();
       statusEl.textContent = `✓ ${added}개 추가 완료${skipped > 0 ? ` (${skipped}개 중복 스킵)` : ''}`;
       statusEl.style.color = '#2E7D32';
