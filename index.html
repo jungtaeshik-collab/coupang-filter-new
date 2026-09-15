@@ -52,6 +52,7 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#F4
 .tab.active-petit{color:#6A1B9A;font-weight:700;border-bottom-color:#6A1B9A}
 .tab.active-label{color:#AD1457;font-weight:700;border-bottom-color:#AD1457}
 .tab.active-other{color:#888;font-weight:700;border-bottom-color:#888}
+.tab.active-new{color:#E65100;font-weight:700;border-bottom-color:#E65100}
 .tab:not(.active-disc):not(.active-ok){color:#999}
 .tab-actions{margin-left:auto;display:flex;gap:6px;align-items:center}
 .table-wrap{overflow-x:auto;max-height:420px;overflow-y:auto}
@@ -181,6 +182,11 @@ tr:nth-child(even) td{background:#FAFAFA}
         <div class="stat-val" style="color:#888" id="s-po">0</div>
         <div style="font-size:12px;color:#888;font-weight:600;margin-top:5px" id="amt-po">-</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:#E65100">신규코드</div>
+        <div class="stat-val" style="color:#E65100" id="s-new">0</div>
+        <div style="font-size:12px;color:#E65100;font-weight:600;margin-top:5px" id="amt-new">-</div>
+      </div>
     </div>
 
     <!-- 전체 액션 -->
@@ -199,6 +205,7 @@ tr:nth-child(even) td{background:#FAFAFA}
       <button class="tab" id="tab-petit-sticker" onclick="switchTab('petit-sticker')">쁘띠스티커 <span id="tab-petit-sticker-count">0</span>개</button>
       <button class="tab" id="tab-petit-label" onclick="switchTab('petit-label')">쁘띠견출지 <span id="tab-petit-label-count">0</span>개</button>
       <button class="tab" id="tab-petit-other" onclick="switchTab('petit-other')">쁘띠기타 <span id="tab-petit-other-count">0</span>개</button>
+      <button class="tab" id="tab-new" onclick="switchTab('new')">🆕신규코드 <span id="tab-new-count">0</span>개</button>
       <div class="tab-actions">
         <button class="btn btn-blue btn-sm" onclick="exportCurrent()">⬇ 엑셀</button>
         <button class="btn btn-default btn-sm" id="copy-cur-btn" onclick="copyData('current')">📋 복사</button>
@@ -529,7 +536,7 @@ function processFile(file) {
       }
 
       const headers = headerRow >= 0 ? rows[headerRow].map(h => String(h)) : [];
-      const disc = [], floem = [], petitSticker = [], petitLabel = [], petitOther = [];
+      const disc = [], floem = [], petitSticker = [], petitLabel = [], petitOther = [], newCodes = [];
       const start = headerRow >= 0 ? headerRow + 1 : 0;
       const fullSet = getFullSet();
       const fullMap = getFullMap();
@@ -569,7 +576,7 @@ function processFile(file) {
       const sortedLabel   = sortPetitLabel(petitLabel);
       const sortedOther   = sortPetitOther(petitOther);
       const petit = [...sortedSticker, ...sortedLabel, ...sortedOther];
-      result = { total: disc.length + floem.length + petit.length, disc, floem: sortedFloem, petit, petitSticker: sortedSticker, petitLabel: sortedLabel, petitOther: sortedOther, headers, fileName: file.name };
+      result = { total: disc.length + floem.length + petit.length + newCodes.length, disc, floem: sortedFloem, petit, petitSticker: sortedSticker, petitLabel: sortedLabel, petitOther: sortedOther, newCodes, headers, fileName: file.name };
       currentTab = 'disc';
       renderResult();
 
@@ -601,6 +608,7 @@ function renderResult() {
   document.getElementById('s-ps').textContent = result.petitSticker.length.toLocaleString();
   document.getElementById('s-pl').textContent = result.petitLabel.length.toLocaleString();
   document.getElementById('s-po').textContent = result.petitOther.length.toLocaleString();
+  document.getElementById('s-new').textContent = result.newCodes.length.toLocaleString();
   // 금액 계산
   const allItems = [...result.disc, ...result.floem, ...result.petitSticker, ...result.petitLabel, ...result.petitOther];
   document.getElementById('amt-total').textContent = fmtAmt(sumAmt(allItems));
@@ -609,11 +617,13 @@ function renderResult() {
   document.getElementById('amt-ps').textContent    = fmtAmt(sumAmt(result.petitSticker));
   document.getElementById('amt-pl').textContent    = fmtAmt(sumAmt(result.petitLabel));
   document.getElementById('amt-po').textContent    = fmtAmt(sumAmt(result.petitOther));
+  document.getElementById('amt-new').textContent   = fmtAmt(sumAmt(result.newCodes));
   document.getElementById('tab-disc-count').textContent = result.disc.length.toLocaleString();
   document.getElementById('tab-floem-count').textContent = result.floem.length.toLocaleString();
   document.getElementById('tab-petit-sticker-count').textContent = result.petitSticker.length.toLocaleString();
   document.getElementById('tab-petit-label-count').textContent = result.petitLabel.length.toLocaleString();
   document.getElementById('tab-petit-other-count').textContent = result.petitOther.length.toLocaleString();
+  document.getElementById('tab-new-count').textContent          = result.newCodes.length.toLocaleString();
   renderTable();
 }
 
@@ -624,6 +634,7 @@ function switchTab(tab) {
   document.getElementById('tab-petit-sticker').className = 'tab' + (tab === 'petit-sticker' ? ' active-petit'  : '');
   document.getElementById('tab-petit-label').className   = 'tab' + (tab === 'petit-label'   ? ' active-label'  : '');
   document.getElementById('tab-petit-other').className   = 'tab' + (tab === 'petit-other'   ? ' active-other'  : '');
+  document.getElementById('tab-new').className          = 'tab' + (tab === 'new'           ? ' active-new'    : '');
   renderTable();
 }
 
@@ -631,7 +642,7 @@ function renderTable() {
   if (!result) return;
   const itemsMap = {
     'disc': result.disc, 'floem': result.floem,
-    'petit-sticker': result.petitSticker, 'petit-label': result.petitLabel, 'petit-other': result.petitOther
+    'petit-sticker': result.petitSticker, 'petit-label': result.petitLabel, 'petit-other': result.petitOther, 'new': result.newCodes
   };
   const items = itemsMap[currentTab] || [];
   const thead = document.getElementById('result-thead');
@@ -642,7 +653,7 @@ function renderTable() {
   if (!items.length) {
     table.style.display = 'none';
     empty.style.display = 'block';
-    const emptyMsgs = { disc:'✓ 단종 제품이 없습니다', floem:'플로엠 제품이 없습니다', 'petit-sticker':'쁘띠스티커 제품이 없습니다', 'petit-label':'쁘띠견출지 제품이 없습니다', 'petit-other':'쁘띠기타 제품이 없습니다' };
+    const emptyMsgs = { disc:'✓ 단종 제품이 없습니다', floem:'플로엠 제품이 없습니다', 'petit-sticker':'쁘띠스티커 제품이 없습니다', 'petit-label':'쁘띠견출지 제품이 없습니다', 'petit-other':'쁘띠기타 제품이 없습니다', 'new':'신규코드 없음' };
     empty.style.color = currentTab === 'disc' ? '#2E7D32' : '#888';
     empty.textContent = emptyMsgs[currentTab] || '없습니다';
     return;
@@ -665,6 +676,7 @@ function renderTable() {
           'petit-sticker': { label:'쁘띠스티커', color:'#6A1B9A', bg:'#F3E5F5' },
           'petit-label':   { label:'쁘띠견출지', color:'#AD1457', bg:'#FCE4EC' },
           'petit-other':   { label:'쁘띠기타',   color:'#555',    bg:'#F0F0F0' },
+          'new':           { label:'신규코드',   color:'#E65100', bg:'#FFF3E0' },
         };
         const b = bMap[currentTab] || { label:'쁘띠팬시', color:'#6A1B9A', bg:'#F3E5F5' };
         return `<td><span style="background:${b.bg};color:${b.color};font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">${b.label}</span></td>`;
@@ -679,9 +691,9 @@ function renderTable() {
 
 // ── 내보내기 ───────────────────────────────────────────────────────────────
 function buildSheet(type) {
-  const typeMap = { disc: result.disc, floem: result.floem, 'petit-sticker': result.petitSticker, 'petit-label': result.petitLabel, 'petit-other': result.petitOther };
+  const typeMap = { disc: result.disc, floem: result.floem, 'petit-sticker': result.petitSticker, 'petit-label': result.petitLabel, 'petit-other': result.petitOther, 'new': result.newCodes };
   const items = typeMap[type] || [];
-  const brandMap = { floem:'플로엠', 'petit-sticker':'쁘띠스티커', 'petit-label':'쁘띠견출지', 'petit-other':'쁘띠기타' };
+  const brandMap = { floem:'플로엠', 'petit-sticker':'쁘띠스티커', 'petit-label':'쁘띠견출지', 'petit-other':'쁘띠기타', 'new':'신규코드' };
   const brandLabel = brandMap[type] || '쁘띠팬시';
   // 열 순서 재정렬
   const orderedCols = reorderHeaders(result.headers);
@@ -708,12 +720,14 @@ function exportAll() {
   XLSX.utils.book_append_sheet(wb, buildSheet('petit-label'),    '쁘띠견출지');
   if (result.petitOther.length > 0)
     XLSX.utils.book_append_sheet(wb, buildSheet('petit-other'),  '쁘띠기타');
+  if (result.newCodes.length > 0)
+    XLSX.utils.book_append_sheet(wb, buildSheet('new'),          '신규코드');
   XLSX.writeFile(wb, '발주확인_필터결과.xlsx');
 }
 
 function exportCurrent() {
   if (!result) return;
-  const labels = { disc:'단종제품', floem:'플로엠', 'petit-sticker':'쁘띠스티커', 'petit-label':'쁘띠견출지', 'petit-other':'쁘띠기타' };
+  const labels = { disc:'단종제품', floem:'플로엠', 'petit-sticker':'쁘띠스티커', 'petit-label':'쁘띠견출지', 'petit-other':'쁘띠기타', 'new':'신규코드' };
   const label = labels[currentTab] || currentTab;
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, buildSheet(currentTab), label);
@@ -723,9 +737,9 @@ function exportCurrent() {
 // ── 복사 ──────────────────────────────────────────────────────────────────
 function buildCopyText(type) {
   if (!result) return '';
-  const typeMap = { disc: result.disc, floem: result.floem, 'petit-sticker': result.petitSticker, 'petit-label': result.petitLabel, 'petit-other': result.petitOther };
+  const typeMap = { disc: result.disc, floem: result.floem, 'petit-sticker': result.petitSticker, 'petit-label': result.petitLabel, 'petit-other': result.petitOther, 'new': result.newCodes };
   const items = typeMap[type] || [];
-  const brandMap = { floem:'플로엠', 'petit-sticker':'쁘띠스티커', 'petit-label':'쁘띠견출지', 'petit-other':'쁘띠기타' };
+  const brandMap = { floem:'플로엠', 'petit-sticker':'쁘띠스티커', 'petit-label':'쁘띠견출지', 'petit-other':'쁘띠기타', 'new':'신규코드' };
   const brandLabel = brandMap[type] || '쁘띠팬시';
   const orderedCols = reorderHeaders(result.headers);
   const prefixCol   = type === 'disc' ? '단종여부' : '브랜드';
